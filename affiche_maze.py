@@ -49,46 +49,6 @@ def show_wall(
                 )
 
 
-def Blue_Ghost(pos_x: int, pos_y: int, scale: int) -> None:
-    blue_ghost = pygame.image.load("assets/Blue_Ghost.png").convert_alpha()
-
-    # Redimensionner à 20 × 20 pixels
-    blue_ghost = pygame.transform.scale(blue_ghost, (scale, scale))
-
-    # Afficher l'image aux coordonnées (100, 80)
-    screen.blit(blue_ghost, (pos_x, pos_y))
-
-
-def Red_Ghost(pos_x: int, pos_y: int, scale: int) -> None:
-    red_ghost = pygame.image.load("assets/Red_Ghost.png").convert_alpha()
-
-    # Redimensionner à 20 × 20 pixels
-    red_ghost = pygame.transform.scale(red_ghost, (scale, scale))
-
-    # Afficher l'image aux coordonnées (100, 80)
-    screen.blit(red_ghost, (pos_x, pos_y))
-
-
-def Orange_Ghost(pos_x: int, pos_y: int, scale: int) -> None:
-    orange_ghost = pygame.image.load("assets/Orange_Ghost.png").convert_alpha()
-
-    # Redimensionner à 20 × 20 pixels
-    orange_ghost = pygame.transform.scale(orange_ghost, (scale, scale))
-
-    # Afficher l'image aux coordonnées (100, 80)
-    screen.blit(orange_ghost, (pos_x, pos_y))
-
-
-def Pink_Ghost(pos_x: int, pos_y: int, scale: int) -> None:
-    pink_ghost = pygame.image.load("assets/Pink_Ghost.png").convert_alpha()
-
-    # Redimensionner à 20 × 20 pixels
-    pink_ghost = pygame.transform.scale(pink_ghost, (scale, scale))
-
-    # Afficher l'image aux coordonnées (100, 80)
-    screen.blit(pink_ghost, (pos_x, pos_y))
-
-
 def PacGum(pos_x: int, pos_y: int, scale: int) -> None:
     pacgum = pygame.image.load("assets/PacGum.png").convert_alpha()
 
@@ -111,18 +71,144 @@ def PacGum_Super(pos_x: int, pos_y: int, scale: int) -> None:
 
 def test_PacMan_animation(
     animation: list[int],
-    images: list[pygame.Surface],
     animation_speed: int,
     pos_x: int,
-    pos_y: int
+    pos_y: int,
 ) -> None:
+    images_PacMan = [
+        pygame.transform.scale(
+            pygame.image.load("assets/PacMan_1.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/PacMan_2.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/PacMan_3.png").convert_alpha(), (pos_y, pos_y)
+        ),
+    ]
     frame = (
         pygame.time.get_ticks() // animation_speed
     ) % len(animation)
 
     image_index = animation[frame]
 
-    screen.blit(images[image_index], (pos_x, pos_y))
+    screen.blit(images_PacMan[image_index], (pos_x, pos_y))
+
+
+def test_Blue_Ghost_animation(
+    pos_x: int,
+    pos_y: int,
+    direction: str
+) -> None:
+    images_Blue_Ghost = [
+        pygame.transform.scale(
+            pygame.image.load("assets/Blue_Ghost_U.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Blue_Ghost_D.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Blue_Ghost_L.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Blue_Ghost_R.png").convert_alpha(), (pos_y, pos_y)
+        ),
+    ]
+    if direction == "U":
+        screen.blit(images_Blue_Ghost[0], (pos_x, pos_y))
+    elif direction == "D":
+        screen.blit(images_Blue_Ghost[1], (pos_x, pos_y))
+    elif direction == "L":
+        screen.blit(images_Blue_Ghost[2], (pos_x, pos_y))
+    elif direction == "R":
+        screen.blit(images_Blue_Ghost[3], (pos_x, pos_y))
+
+
+def test_Red_Ghost_animation(
+    pos_x: int,
+    pos_y: int,
+    direction: str
+) -> None:
+    images_Red_Ghost = [
+        pygame.transform.scale(
+            pygame.image.load("assets/Red_Ghost_U.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Red_Ghost_D.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Red_Ghost_L.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Red_Ghost_R.png").convert_alpha(), (pos_y, pos_y)
+        ),
+    ]
+    if direction == "U":
+        screen.blit(images_Red_Ghost[0], (pos_x, pos_y))
+    elif direction == "D":  
+        screen.blit(images_Red_Ghost[1], (pos_x, pos_y))
+    elif direction == "L":
+        screen.blit(images_Red_Ghost[2], (pos_x, pos_y))
+    elif direction == "R":
+        screen.blit(images_Red_Ghost[3], (pos_x, pos_y))
+
+
+def test_Orange_Ghost_animation(
+    pos_x: int,
+    pos_y: int,
+    direction: str
+) -> None:
+    images_Orange_Ghost = [
+        pygame.transform.scale(
+            pygame.image.load("assets/Orange_Ghost_U.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Orange_Ghost_D.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Orange_Ghost_L.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Orange_Ghost_R.png").convert_alpha(), (pos_y, pos_y)
+        ),
+    ]
+    if direction == "U":
+        screen.blit(images_Orange_Ghost[0], (pos_x, pos_y))
+    elif direction == "D":
+        screen.blit(images_Orange_Ghost[1], (pos_x, pos_y))
+    elif direction == "L":
+        screen.blit(images_Orange_Ghost[2], (pos_x, pos_y))
+    elif direction == "R":
+        screen.blit(images_Orange_Ghost[3], (pos_x, pos_y))
+
+
+def test_Pink_Ghost_animation(
+    pos_x: int,
+    pos_y: int,
+    direction: str
+) -> None:
+    images_Pink_Ghost = [
+        pygame.transform.scale(
+            pygame.image.load("assets/Pink_Ghost_U.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Pink_Ghost_D.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Pink_Ghost_L.png").convert_alpha(), (pos_y, pos_y)
+        ),
+        pygame.transform.scale(
+            pygame.image.load("assets/Pink_Ghost_R.png").convert_alpha(), (pos_y, pos_y)
+        ),
+    ]
+    if direction == "U":
+        screen.blit(images_Pink_Ghost[0], (pos_x, pos_y))
+    elif direction == "D":
+        screen.blit(images_Pink_Ghost[1], (pos_x, pos_y))
+    elif direction == "L":
+        screen.blit(images_Pink_Ghost[2], (pos_x, pos_y))
+    elif direction == "R":
+        screen.blit(images_Pink_Ghost[3], (pos_x, pos_y))
 
 
 def affiche_maze(
@@ -133,24 +219,11 @@ def affiche_maze(
 ) -> None:
     # Définir la taille des cellules du labyrinthe
     width = len(maze[0]) * scale
-    height = len(maze) * scale
+    '''height = len(maze) * scale'''
 
     # Calculer la position du labyrinthe pour le centrer à l'écran
     maze_pos = (screen_size[0] - width) // 2
     '''maze_pos_y = ((screen_size[1] - height) // 2) - 200'''
-
-    # Charger les images pour l'animation de Pac-Man
-    images = [
-        pygame.transform.scale(
-            pygame.image.load("assets/PacMan_1.png").convert_alpha(), (scale, scale)
-        ),
-        pygame.transform.scale(
-            pygame.image.load("assets/PacMan_2.png").convert_alpha(), (scale, scale)
-        ),
-        pygame.transform.scale(
-            pygame.image.load("assets/PacMan_3.png").convert_alpha(), (scale, scale)
-        ),
-    ]
 
     # Ordre des images
     animation = [0, 1, 2, 1]
@@ -166,16 +239,16 @@ def affiche_maze(
             if event.type == pygame.QUIT:
                 running = False
 
-        screen.fill((0, 0, 0))
+        screen.fill((100, 100, 100))
 
         show_wall(screen, maze_pos, scale)
 
-        test_PacMan_animation(animation, images, animation_speed, scale * 2, scale)
+        test_PacMan_animation(animation, animation_speed, scale * 2, scale)
 
-        Red_Ghost(scale * 1, 0, scale)
-        Blue_Ghost(scale * 2, 0, scale)
-        Orange_Ghost(scale * 3, 0, scale)
-        Pink_Ghost(scale * 4, 0, scale)
+        test_Red_Ghost_animation(scale * 5, scale, "L")
+        test_Blue_Ghost_animation(scale * 6, scale, "D")
+        test_Orange_Ghost_animation(scale * 7, scale, "U")
+        test_Pink_Ghost_animation(scale * 8, scale, "D")
 
         for i in range(5):
             PacGum((scale * i + scale * 5) + i * 20, 0, scale)
