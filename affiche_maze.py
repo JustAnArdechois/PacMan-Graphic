@@ -352,109 +352,93 @@ def game_runnig(
     pacman_speed: int,
     ghost_speed: int
 ) -> None:
-    # Définir la taille des cellules du labyrinthe
     width = len(maze[0]) * scale
-    '''height = len(maze) * scale'''
-
-    # Calculer la position du labyrinthe pour le centrer à l'écran
     maze_pos = (screen_size[0] - width) // 2
-    '''maze_pos_y = ((screen_size[1] - height) // 2) - 200'''
-
-    # Ordre des images
     animation = [0, 1, 2, 1]
-
-    # Durée d'une image en millisecondes
     animation_speed = 80
 
-    Pac_Man_Place = (505, 505, "R")  # Position initiale de Pac-Man
-
     pacman_radius = scale * 0.8 / 2
+    directions = {
+        pygame.K_w: "U", pygame.K_s: "D",
+        pygame.K_a: "L", pygame.K_d: "R"
+    }
+    movements = {
+        "U": (0, -1), "D": (0, 1),
+        "L": (-1, 0), "R": (1, 0)
+    }
+    wall_bits = {"U": 1, "R": 2, "D": 4, "L": 8}
 
+    def open_passage(col: int, row: int, facing: str) -> bool:
+        dx, dy = movements[facing]
+        new_col, new_row = col + dx, row + dy
+        if not (0 <= row < len(maze) and 0 <= col < len(maze[row])):
+            return False
+        if not (0 <= new_row < len(maze) and
+                0 <= new_col < len(maze[new_row])):
+            return False
+        return not (maze[row][col] & wall_bits[facing])
+
+    # Position initiale : centre exact de la case (9, 9).
+    col, row = 9, 9
+    center_x = maze_pos + (col + 0.5) * scale
+    center_y = maze_pos + (row + 0.5) * scale
     direction = "R"
     next_direction = "R"
-
-    directions = {
-        pygame.K_w: "U",
-        pygame.K_s: "D",
-        pygame.K_a: "L",
-        pygame.K_d: "R"
-    }
-
-    movements = {
-        "U": (0, -1),
-        "D": (0, 1),
-        "L": (-1, 0),
-        "R": (1, 0)
-    }
+    target_x, target_y = center_x, center_y
 
     clock = pygame.time.Clock()
     running = True
-
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
             elif event.type == pygame.KEYDOWN:
                 if event.key in directions:
                     next_direction = directions[event.key]
-
-                elif event.key == pygame.K_p:
+                elif event.key in (pygame.K_p, pygame.K_ESCAPE):
                     running = False
+        if not running:
+            break
+
+        # Un virage est choisi uniquement au centre d'une case.
+        if center_x == target_x and center_y == target_y:
+            if open_passage(col, row, next_direction):
+                direction = next_direction
+            if open_passage(col, row, direction):
+                dx, dy = movements[direction]
+                col += dx
+                row += dy
+                target_x = maze_pos + (col + 0.5) * scale
+                target_y = maze_pos + (row + 0.5) * scale
+
+        # Avancer jusqu'au centre de la case suivante sans le dépasser.
+        if center_x < target_x:
+            center_x = min(center_x + pacman_speed, target_x)
+        elif center_x > target_x:
+            center_x = max(center_x - pacman_speed, target_x)
+        if center_y < target_y:
+            center_y = min(center_y + pacman_speed, target_y)
+        elif center_y > target_y:
+            center_y = max(center_y - pacman_speed, target_y)
 
         screen.fill(colors.BLACK)
-
-        # Centre de Pac-Man
-        center_x = Pac_Man_Place[0] + pacman_radius
-        center_y = Pac_Man_Place[1] + pacman_radius
-
-        # Vérifier si le virage demandé est possible
-        if can_move(
-            maze,
-            center_x,
-            center_y,
-            next_direction,
-            pacman_speed,
-            scale,
-            maze_pos,
-            pacman_radius,
-            margin=2
-        ):
-            direction = next_direction
-
-        # Déplacement automatique
-        if can_move(
-            maze,
-            center_x,
-            center_y,
-            direction,
-            pacman_speed,
-            scale,
-            maze_pos,
-            pacman_radius,
-            margin=2
-        ):
-            dx, dy = movements[direction]
-
-            Pac_Man_Place = (
-                Pac_Man_Place[0] + dx * pacman_speed,
-                Pac_Man_Place[1] + dy * pacman_speed,
-                direction
-            )
-        if keys[pygame.K_ESCAPE]:
-                running = False
-
         show_wall(screen, maze_pos, scale)
-
+        Pac_Man_Place = (
+            center_x - pacman_radius,
+            center_y - pacman_radius,
+            direction
+        )
         test_PacMan_animation(
             animation, animation_speed,
-            pos=Pac_Man_Place,
+            pos=(
+                round(Pac_Man_Place[0]),
+                round(Pac_Man_Place[1]),
+                Pac_Man_Place[2],
+            ),
             scale=scale * 0.8
         )
-
         pygame.display.flip()
         clock.tick(60)
-
     pygame.quit()
 
 
