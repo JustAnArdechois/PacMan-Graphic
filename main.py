@@ -72,7 +72,8 @@ def main() -> None:
             screen_size,
             scale=40,
             pacman_speed=2,
-            ghost_speed=3
+            ghost_speed=3,
+            format_clavier="dualzqsd"
         )
         if not should_return_to_menu:
             break

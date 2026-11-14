@@ -1,6 +1,6 @@
 from typing import Any
 
-from game.config_parser import get_int, log_error
+from config_parser import get_int, log_error
 
 LEVEL_COUNT = 10
 # The maze package draws its 7x5 '42' pattern only if the maze is at

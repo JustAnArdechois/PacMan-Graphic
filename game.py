@@ -97,12 +97,12 @@ def PacGum_Super(
     screen.blit(pacgum_super, (pos_x, pos_y))
 
 
-def test_PacMan_animation(
+def PacMan_Movements(
     screen: pygame.Surface,
     animation: list[int],
     animation_speed: int,
     pos: tuple[int, int, str],
-    scale: float,
+    scale: float
 ) -> None:
     images_PacMan = [
         pygame.transform.scale(
@@ -123,6 +123,7 @@ def test_PacMan_animation(
     ) % len(animation)
 
     image_index = animation[frame]
+
     if pos[2] == "U":
         images_PacMan[image_index] = pygame.transform.rotate(
             images_PacMan[image_index], 90
@@ -140,36 +141,53 @@ def test_PacMan_animation(
 
 def test_Blue_Ghost_animation(
     screen: pygame.Surface,
-    pos_x: int,
-    pos_y: int,
-    direction: str,
+    pos: tuple[int, int, str],
+    animation: list[int],
+    animation_speed: int,
+    scale: float
 ) -> None:
     images_Blue_Ghost = [
         pygame.transform.scale(
             pygame.image.load("assets/Blue_Ghost_U.png").convert_alpha(),
-            (pos_y, pos_y),
+            (scale, scale),
         ),
         pygame.transform.scale(
             pygame.image.load("assets/Blue_Ghost_D.png").convert_alpha(),
-            (pos_y, pos_y),
+            (scale, scale),
         ),
         pygame.transform.scale(
             pygame.image.load("assets/Blue_Ghost_L.png").convert_alpha(),
-            (pos_y, pos_y),
+            (scale, scale),
         ),
         pygame.transform.scale(
             pygame.image.load("assets/Blue_Ghost_R.png").convert_alpha(),
-            (pos_y, pos_y),
+            (scale, scale),
         ),
     ]
-    if direction == "U":
-        screen.blit(images_Blue_Ghost[0], (pos_x, pos_y))
-    elif direction == "D":
-        screen.blit(images_Blue_Ghost[1], (pos_x, pos_y))
-    elif direction == "L":
-        screen.blit(images_Blue_Ghost[2], (pos_x, pos_y))
-    elif direction == "R":
-        screen.blit(images_Blue_Ghost[3], (pos_x, pos_y))
+    '''frame = (
+            pygame.time.get_ticks() // animation_speed
+        ) % len(animation)'''
+
+    image_index = {
+        "U": 0,
+        "D": 1,
+        "L": 2,
+        "R": 3
+    }[pos[2]]
+
+    if pos[2] == "U":
+        images_Blue_Ghost[image_index] = pygame.transform.rotate(
+            images_Blue_Ghost[image_index], 90
+        )
+    elif pos[2] == "D":
+        images_Blue_Ghost[image_index] = pygame.transform.rotate(
+            images_Blue_Ghost[image_index], -90
+        )
+    elif pos[2] == "L":
+        images_Blue_Ghost[image_index] = pygame.transform.flip(
+            images_Blue_Ghost[image_index], True, False
+        )
+    screen.blit(images_Blue_Ghost[image_index], (pos[0], pos[1]))
 
 
 def test_Red_Ghost_animation(
@@ -383,13 +401,55 @@ def open_passage(
     return not (maze[row][col] & WALL_BITS[facing])
 
 
+def move_character(
+    character: dict,
+    maze: list[list[int]],
+    maze_pos: int,
+    scale: int,
+    speed: int
+) -> None:
+    if (character["center_x"] == character["target_x"]
+            and character["center_y"] == character["target_y"]):
+
+        col = character["col"]
+        row = character["row"]
+
+        if open_passage(col, row, character["next_direction"], maze):
+            character["direction"] = character["next_direction"]
+
+        if open_passage(col, row, character["direction"], maze):
+            dx, dy = MOVEMENTS[character["direction"]]
+
+            character["col"] += dx
+            character["row"] += dy
+
+            character["target_x"] = (
+                maze_pos + (character["col"] + 0.5) * scale
+            )
+            character["target_y"] = (
+                maze_pos + (character["row"] + 0.5) * scale
+            )
+
+    for axis in ("x", "y"):
+        center = character[f"center_{axis}"]
+        target = character[f"target_{axis}"]
+
+        if center < target:
+            center = min(center + speed, target)
+        elif center > target:
+            center = max(center - speed, target)
+
+        character[f"center_{axis}"] = center
+
+
 def game_runnig(
     maze: list[list[int]],
     screen: pygame.Surface,
     screen_size: tuple[int, int],
     scale: int,
     pacman_speed: int,
-    ghost_speed: int
+    ghost_speed: int,
+    format_clavier: str
 ) -> bool:
     width = len(maze[0]) * scale
     maze_pos = (screen_size[0] - width) // 2
@@ -397,18 +457,57 @@ def game_runnig(
     animation_speed = 80
 
     pacman_radius = scale * 0.8 / 2
-    directions = {
-        pygame.K_w: "U", pygame.K_s: "D",
-        pygame.K_a: "L", pygame.K_d: "R"
-    }
+    if format_clavier == "zqsd":
+        directions = {
+            pygame.K_z: "U", pygame.K_s: "D",
+            pygame.K_q: "L", pygame.K_d: "R"
+        }
+    elif format_clavier == "wasd":
+        directions = {
+            pygame.K_w: "U", pygame.K_s: "D",
+            pygame.K_a: "L", pygame.K_d: "R"
+        }
+    elif format_clavier == "arrows":
+        directions = {
+            pygame.K_UP: "U", pygame.K_DOWN: "D",
+            pygame.K_LEFT: "L", pygame.K_RIGHT: "R"
+        }
+    elif format_clavier == "dualzqsd":
+        directions1 = {
+            pygame.K_z: "U", pygame.K_s: "D",
+            pygame.K_q: "L", pygame.K_d: "R",
+        }
+        directions2 = {
+            pygame.K_UP: "U", pygame.K_DOWN: "D",
+            pygame.K_LEFT: "L", pygame.K_RIGHT: "R",
+        }
+    elif format_clavier == "dualwasd":
+        directions1 = {
+            pygame.K_w: "U", pygame.K_s: "D",
+            pygame.K_a: "L", pygame.K_d: "R",
+        }
+        directions2 = {
+            pygame.K_UP: "U", pygame.K_DOWN: "D",
+            pygame.K_LEFT: "L", pygame.K_RIGHT: "R",
+        }
 
-    # Position initiale : centre exact de la case (9, 9).
-    col, row = 9, 9
-    center_x = maze_pos + (col + 0.5) * scale
-    center_y = maze_pos + (row + 0.5) * scale
-    direction = "R"
-    next_direction = "R"
-    target_x, target_y = center_x, center_y
+    def create_character(col, row, direction, maze_pos, scale):
+        center_x = maze_pos + (col + 0.5) * scale
+        center_y = maze_pos + (row + 0.5) * scale
+
+        return {
+            "col": col,
+            "row": row,
+            "direction": direction,
+            "next_direction": direction,
+            "center_x": center_x,
+            "center_y": center_y,
+            "target_x": center_x,
+            "target_y": center_y
+        }
+
+    pacman = create_character(9, 9, "R", maze_pos, scale)
+    ghost = create_character(0, 0, "L", maze_pos, scale)
 
     clock = pygame.time.Clock()
     running = True
@@ -416,51 +515,57 @@ def game_runnig(
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
+
             elif event.type == pygame.KEYDOWN:
-                if event.key in directions:
-                    next_direction = directions[event.key]
-                elif event.key in (pygame.K_p, pygame.K_ESCAPE):
+                if event.key in (pygame.K_p, pygame.K_ESCAPE):
                     running = False
+
+                elif (
+                    format_clavier == "dualwasd"
+                    or format_clavier == "dualzqsd"
+                ):
+                    if event.key in directions1:
+                        pacman["next_direction"] = directions1[event.key]
+
+                    elif event.key in directions2:
+                        ghost["next_direction"] = directions2[event.key]
+
+                elif event.key in directions:
+                    pacman["next_direction"] = directions[event.key]
+
         if not running:
             break
 
-        # Un virage est choisi uniquement au centre d'une case.
-        if center_x == target_x and center_y == target_y:
-            if open_passage(col, row, next_direction, maze):
-                direction = next_direction
-            if open_passage(col, row, direction, maze):
-                dx, dy = MOVEMENTS[direction]
-                col += dx
-                row += dy
-                target_x = maze_pos + (col + 0.5) * scale
-                target_y = maze_pos + (row + 0.5) * scale
-
-        # Avancer jusqu'au centre de la case suivante sans le dépasser.
-        if center_x < target_x:
-            center_x = min(center_x + pacman_speed, target_x)
-        elif center_x > target_x:
-            center_x = max(center_x - pacman_speed, target_x)
-        if center_y < target_y:
-            center_y = min(center_y + pacman_speed, target_y)
-        elif center_y > target_y:
-            center_y = max(center_y - pacman_speed, target_y)
-
+        move_character(
+            pacman, maze, maze_pos, scale, pacman_speed
+        )
         screen.fill(colors.BLACK)
         show_wall(screen, maze_pos, scale, maze)
-        Pac_Man_Place = (
-            center_x - pacman_radius,
-            center_y - pacman_radius,
-            direction
-        )
-        test_PacMan_animation(
-            screen, animation, animation_speed,
+
+        PacMan_Movements(
+            screen,
+            animation,
+            animation_speed,
             pos=(
-                round(Pac_Man_Place[0]),
-                round(Pac_Man_Place[1]),
-                Pac_Man_Place[2],
+                round(pacman["center_x"] - pacman_radius),
+                round(pacman["center_y"] - pacman_radius),
+                pacman["direction"]
             ),
             scale=scale * 0.8
         )
+
+        if format_clavier == "dualwasd" or format_clavier == "dualzqsd":
+            test_Blue_Ghost_animation(
+                screen,
+                pos=(
+                    round(ghost["center_x"] - pacman_radius),
+                    round(ghost["center_y"] - pacman_radius),
+                    ghost["direction"]
+                ),
+                animation=animation,
+                animation_speed=animation_speed,
+                scale=scale * 0.8
+            )
         pygame.display.flip()
         clock.tick(60)
     return True  # Retour au menu (P ou Échap)
