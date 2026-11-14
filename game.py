@@ -1,6 +1,20 @@
 import pygame
 import colors
 
+MOVEMENTS = {
+        "U": (0, -1),
+        "D": (0, 1),
+        "L": (-1, 0),
+        "R": (1, 0)
+}
+
+WALL_BITS = {
+    "U": 1,
+    "R": 2,
+    "D": 4,
+    "L": 8
+}
+
 
 def show_wall(
     screen: pygame.Surface,
@@ -287,17 +301,11 @@ def can_move(
     radius: float,
     margin: float = 2
 ) -> bool:
-    movements = {
-        "U": (0, -1),
-        "D": (0, 1),
-        "L": (-1, 0),
-        "R": (1, 0)
-    }
 
-    if direction not in movements:
+    if direction not in MOVEMENTS:
         return False
 
-    dx, dy = movements[direction]
+    dx, dy = MOVEMENTS[direction]
 
     # Position du centre après déplacement
     next_x = x + dx * speed
@@ -359,6 +367,22 @@ def can_move(
     return True
 
 
+def open_passage(
+    col: int,
+    row: int,
+    facing: str,
+    maze: list[list[int]]
+) -> bool:
+    dx, dy = MOVEMENTS[facing]
+    new_col, new_row = col + dx, row + dy
+    if not (0 <= row < len(maze) and 0 <= col < len(maze[row])):
+        return False
+    if not (0 <= new_row < len(maze) and
+            0 <= new_col < len(maze[new_row])):
+        return False
+    return not (maze[row][col] & WALL_BITS[facing])
+
+
 def game_runnig(
     maze: list[list[int]],
     screen: pygame.Surface,
@@ -377,21 +401,6 @@ def game_runnig(
         pygame.K_w: "U", pygame.K_s: "D",
         pygame.K_a: "L", pygame.K_d: "R"
     }
-    movements = {
-        "U": (0, -1), "D": (0, 1),
-        "L": (-1, 0), "R": (1, 0)
-    }
-    wall_bits = {"U": 1, "R": 2, "D": 4, "L": 8}
-
-    def open_passage(col: int, row: int, facing: str) -> bool:
-        dx, dy = movements[facing]
-        new_col, new_row = col + dx, row + dy
-        if not (0 <= row < len(maze) and 0 <= col < len(maze[row])):
-            return False
-        if not (0 <= new_row < len(maze) and
-                0 <= new_col < len(maze[new_row])):
-            return False
-        return not (maze[row][col] & wall_bits[facing])
 
     # Position initiale : centre exact de la case (9, 9).
     col, row = 9, 9
@@ -417,10 +426,10 @@ def game_runnig(
 
         # Un virage est choisi uniquement au centre d'une case.
         if center_x == target_x and center_y == target_y:
-            if open_passage(col, row, next_direction):
+            if open_passage(col, row, next_direction, maze):
                 direction = next_direction
-            if open_passage(col, row, direction):
-                dx, dy = movements[direction]
+            if open_passage(col, row, direction, maze):
+                dx, dy = MOVEMENTS[direction]
                 col += dx
                 row += dy
                 target_x = maze_pos + (col + 0.5) * scale
