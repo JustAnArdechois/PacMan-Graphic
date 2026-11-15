@@ -555,6 +555,9 @@ def game_runnig(
         )
 
         if format_clavier == "dualwasd" or format_clavier == "dualzqsd":
+            move_character(
+                ghost, maze, maze_pos, scale, ghost_speed
+            )
             test_Blue_Ghost_animation(
                 screen,
                 pos=(
