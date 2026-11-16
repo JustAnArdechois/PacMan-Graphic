@@ -85,18 +85,17 @@ def load_highscores(path: str) -> list[dict[str, Any]]:
         with open(path, "r", encoding="utf-8") as scores_file:
             data = json.load(scores_file)
     except FileNotFoundError:
-        # Normal on the very first game: no file yet, no message
+        # Normal on the very first game: no file yet, no message.
         return []
     except OSError as error:
         log_error(f"cannot read {path}: {error.strerror}")
+        return []
     except UnicodeDecodeError:
         log_error(f"{path} is not a valid UTF-8 file")
         return []
     except json.JSONDecodeError as error:
-        log_error(f"invalid JSON in {path}: {error.msg} "
-                  f"(line {error.lineno})")
+        log_error(f"invalid JSON in {path}: {error.msg} (line {error.lineno})")
         return []
-
     if not isinstance(data, list):
         log_error(f"{path} must contain a JSON list")
         return []
@@ -120,10 +119,10 @@ def load_highscores(path: str) -> list[dict[str, Any]]:
 
 
 def add_score(
-        scores: list[dict[str, Any]],
-        name: str,
-        score: int,
-        ) -> list[dict[str, Any]]:
+    scores: list[dict[str, Any]],
+    name: str,
+    score: int,
+) -> list[dict[str, Any]]:
     """Add a new score and keep the best ones.
 
     Args:
