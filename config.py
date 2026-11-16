@@ -19,7 +19,7 @@ class Config:
 
 
 def load_game_config(filename: str) -> Config:
-    """Load the config file and return a Config object with all settings.
+    """Load the config file. This is the only function the game calls.
 
     This never raises. Every missing or invalid setting is replaced
     with a default and logged.
@@ -27,9 +27,12 @@ def load_game_config(filename: str) -> Config:
     Args:
         filename: The path to the config file.
     Returns:
-        A Config object with all settings.
+        The settings, ready to use.
     """
     data = load_config(filename)
+    # Minimums: at least 1 life and 1 pacgum (0 pacgums would win the
+    # level right away), points can be 0. seed starts at 1 because
+    # the maze package makes any seed <= 0 random.
     return Config(
         highscore_filename=get_str(data, "highscore_filename",
                                    "highscores.json"),

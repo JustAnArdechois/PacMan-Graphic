@@ -31,6 +31,7 @@ def available_directions(
     cell = maze[row][col]
     directions: list[str] = []
     for direction, wall in WALLS.items():
+        # cell & wall keeps only that wall's bit: 0 means no wall.
         if not cell & wall:
             directions.append(direction)
     return directions
@@ -57,6 +58,7 @@ def random_direction(
     directions = available_directions(maze, col, row)
     if not directions:
         raise ValueError(f"ghost stuck in closed cell ({col}, {row})")
+    # No U-turn, or the ghost goes back and forth in corridors.
     forward: list[str] = []
     for d in directions:
         if d != REVERSE[current]:
@@ -87,6 +89,9 @@ def chase_direction(
     """
     if ghost == target:
         return random_direction(maze, ghost[0], ghost[1], current)
+    # parents says where we came from to reach each cell. It is also
+    # the list of cells already seen. The ghost has no parent, so it
+    # is checked separately in the loop.
     parents: dict[tuple[int, int], tuple[int, int]] = {}
     queue: deque[tuple[int, int]] = deque([ghost])
     while queue:
