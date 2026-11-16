@@ -1,3 +1,6 @@
+# The config parser works in three steps:
+# strip_comments -> json.loads (in load_config) -> get_int / get_str
+# check each key one by one.
 import json
 import sys
 from typing import Any
@@ -50,6 +53,8 @@ def load_config(path: str) -> dict[str, Any]:
         with open(path, "r", encoding="utf-8") as config_file:
             text = config_file.read()
         data = json.loads(strip_comments(text))
+    # One message per kind of error, and the game starts anyway
+    # with an empty config (so every setting gets its default).
     except FileNotFoundError:
         log_error(f"file not found: {path}")
         return {}
@@ -93,6 +98,8 @@ def get_int(
         return default
     value = config[key]
 
+    # One question per if, each with its own return: type first,
+    # then minimum. bool is checked first because True is an int.
     if isinstance(value, bool) or not isinstance(value, int):
         log_error(
             f"config key '{key}' must be an int, using default"

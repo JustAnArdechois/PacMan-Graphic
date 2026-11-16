@@ -18,6 +18,8 @@ def default_level(index: int) -> dict[str, int]:
     Returns:
         A dict with the default width and height for that level.
     """
+    # Levels get bigger each time: 10, 20, 30... never below the
+    # minimum size.
     size = 10 * (index + 1)
     return {"width": max(size, MIN_WIDTH), "height": max(size, MIN_HEIGHT)}
 
@@ -54,6 +56,8 @@ def get_levels(config: dict[str, Any]) -> list[dict[str, int]]:
             raw_levels = config["levels"]
         else:
             log_error("config key 'levels' must be a list, using defaults")
+    # Keep the config's levels (fixed one by one if invalid), then
+    # add default levels until there are LEVEL_COUNT.
     levels = [parse_level(raw, i) for i, raw in enumerate(raw_levels)]
     missing = LEVEL_COUNT - len(levels)
     if missing > 0:
