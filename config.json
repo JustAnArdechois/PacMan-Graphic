@@ -1,56 +1,52 @@
-# Configuration file for Pacman
 {
 	"highscore_filename": "highscores.json",
 	"levels": [
 		{
-			"width": 10,
+			"width": 14,
 			"height": 10
 		},
 		{
-			"width": 20,
+			"width": 28,
 			"height": 20
 		},
-		# The following levels are after the first two levels
 		{
-			"width": 30,
+			"width": 42,
 			"height": 30
 		},
 		{
-			"width": 40,
+			"width": 56,
 			"height": 40
 		},
 		{
-			"width": 50,
+			"width": 70,
 			"height": 50
 		},
 		{
-			"width": 60,
+			"width": 84,
 			"height": 60
 		},
 		{
-			"width": 70,
+			"width": 98,
 			"height": 70
 		},
 		{
-			"width": 80,
+			"width": 112,
 			"height": 80
 		},
 		{
-			"width": 90,
+			"width": 126,
 			"height": 90
 		},
 		{
-			"width": 100,
+			"width": 140,
 			"height": 100
 		}
 	],
-	# The following are game settings
 	"lives": 3,
 	"pacgum": 42,
 	"points_per_pacgum": 10,
 	"points_per_ghost": 200,
 	"points_per_super_pacgum": 50,
-	# Seed for random number generation, useful for reproducibility
 	"seed": 42,
 	"level_max_time": 90
 }

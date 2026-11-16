@@ -2,6 +2,27 @@ from mazegenerator import MazeGenerator  # type: ignore[import-untyped]
 import pygame
 import colors
 from game import game_runnig
+from config_parser import load_config, get_int, get_str
+from levels import get_levels
+
+config = load_config("config.json")
+
+levels = get_levels(config)
+
+lives = get_int(config, "lives", 3, minimum=1)
+seed = get_int(config, "seed", 42)
+highscore_file = get_str(
+    config,
+    "highscore_filename",
+    "highscores.json"
+)
+
+# Premier niveau
+level = levels[0]
+
+print("Dimensions :", level["width"], level["height"])
+print("Vies :", lives)
+print("Seed :", seed)
 
 
 def main_menu(screen: pygame.Surface) -> bool:
@@ -58,8 +79,8 @@ def main() -> None:
     pygame.display.set_caption("Pac Man")
 
     maze = MazeGenerator(
-        size=(20, 20),
-        seed=42,
+        size=(level["width"], level["height"]),
+        seed=seed,
         perfect=False
     ).maze
 
@@ -73,7 +94,7 @@ def main() -> None:
             scale=40,
             pacman_speed=2,
             ghost_speed=3,
-            format_clavier="dualzqsd"
+            format_clavier="dualwasd"
         )
         if not should_return_to_menu:
             break

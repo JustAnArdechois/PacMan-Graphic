@@ -491,7 +491,13 @@ def game_runnig(
             pygame.K_LEFT: "L", pygame.K_RIGHT: "R",
         }
 
-    def create_character(col, row, direction, maze_pos, scale):
+    def create_character(
+        col: int,
+        row: int,
+        direction: str,
+        maze_pos: int,
+        scale: int
+    ) -> dict:
         center_x = maze_pos + (col + 0.5) * scale
         center_y = maze_pos + (row + 0.5) * scale
 
