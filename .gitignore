@@ -1,2 +1,10 @@
 __pycache__/
+*.py[cod]
+.venv/
 .mypy_cache/
+.pytest_cache/
+.flake8_cache/
+build/
+dist/
+*.spec
+highscores.json
