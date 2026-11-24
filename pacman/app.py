@@ -1,5 +1,5 @@
 """Application state machine with themed menus."""
-import pygame  # type: ignore[import-not-found]
+import pygame
 from .configuration import Settings
 from .game import Game
 from .highscores import Highscores

@@ -1,5 +1,5 @@
 """Menu layouts and shared keyboard/mouse navigation."""
-import pygame  # type: ignore[import-not-found]
+import pygame
 from .widgets import Button
 from .themes import Theme, THEMES
 from .preferences import Preferences

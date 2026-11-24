@@ -1,6 +1,6 @@
 """Themed rendering and cached maze geometry."""
 import math
-import pygame  # type: ignore[import-not-found]
+import pygame
 from .game import Game
 from .sprites import SpriteManager
 from .preferences import Preferences

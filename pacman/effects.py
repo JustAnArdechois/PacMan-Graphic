@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import math
 import random
-import pygame  # type: ignore[import-not-found]
+import pygame
 from .themes import Color
 
 

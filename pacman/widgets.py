@@ -1,6 +1,6 @@
 """Reusable Pygame interface primitives."""
 from dataclasses import dataclass
-import pygame  # type: ignore[import-not-found]
+import pygame
 from .themes import Theme
 
 
