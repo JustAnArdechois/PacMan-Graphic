@@ -1,0 +1,10 @@
+{
+  "theme": "tron",
+  "glow": true,
+  "particles": true,
+  "animations": true,
+  "scanlines": false,
+  "show_fps": true,
+  "fullscreen": false,
+  "fps_limit": 144
+}

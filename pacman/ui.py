@@ -1,96 +1,163 @@
-"""Pygame rendering using basic MLX-equivalent primitives."""
+"""Themed rendering and cached maze geometry."""
 import math
-from typing import Any
-import pygame
+import pygame  # type: ignore[import-not-found]
 from .game import Game
 from .sprites import SpriteManager
-
-BLACK = (8, 9, 24)
-WHITE = (240, 240, 240)
-YELLOW = (255, 220, 0)
-BLUE = (50, 95, 245)
+from .preferences import Preferences
+from .themes import THEMES, Theme
+from .widgets import text, bar
+from .effects import ParticleSystem, scanlines
 
 
 class Renderer:
-    """Draw the game and simple text-based screens."""
-
-    def __init__(self, screen: pygame.Surface) -> None:
-        """Prepare screen and fonts."""
+    def __init__(self, screen: pygame.Surface, prefs: Preferences) -> None:
         self.screen = screen
-        self.font = pygame.font.Font(None, 32)
-        self.big = pygame.font.Font(None, 75)
+        self.prefs = prefs
+        self.font = pygame.font.Font(None, 30)
+        self.big = pygame.font.Font(None, 82)
+        self.small = pygame.font.Font(None, 22)
         self.sprites = SpriteManager()
+        self.particles = ParticleSystem()
+        self.crt = scanlines(screen)
+        self.maze_key: tuple[object, ...] | None = None
+        self.maze_layer = pygame.Surface(screen.get_size())
+        self.previous_maze: object = None
+        self.previous_gums: set[tuple[int, int]] = set()
 
-    def text(self, message: str, y: int, big: bool = False,
-             color: tuple[int, int, int] = WHITE) -> None:
-        """Draw a horizontally centered text line."""
-        font = self.big if big else self.font
-        surface = font.render(message, True, color)
-        self.screen.blit(surface, surface.get_rect(
-            center=(self.screen.get_width() // 2, y)))
+    @property
+    def theme(self) -> Theme:
+        return THEMES[self.prefs.theme]
 
-    def menu(self, entries: list[dict[str, Any]]) -> None:
-        """Draw the main menu with high scores."""
-        self.screen.fill(BLACK)
-        self.text('PAC-MAN', 105, True, YELLOW)
-        self.text('ENTER: PLAY   H: HIGHSCORES', 220)
-        self.text('I: INSTRUCTIONS   ESC: EXIT', 260)
-        self.text('TOP 10', 350, color=YELLOW)
-        for i, entry in enumerate(entries[:10]):
-            self.text(f"{i + 1}. {entry['name']} - {entry['score']}",
-                      390 + i * 32)
+    def text(self, message: str, y: int, big: bool = False) -> None:
+        text(self.screen, self.big if big else self.font, message,
+             (550, y), self.theme.accent if big else self.theme.foreground)
 
-    def game(self, game: Game) -> None:
-        """Draw maze, pellets, ghosts, player and always-visible HUD."""
-        self.screen.fill(BLACK)
+    def background(self) -> None:
+        self.screen.fill(self.theme.background)
+        if self.prefs.theme == 'tron':
+            for x in range(0, 1100, 40):
+                pygame.draw.line(
+                    self.screen, self.theme.panel, (x, 0), (x, 850)
+                )
+            for y in range(0, 850, 40):
+                pygame.draw.line(
+                    self.screen, self.theme.panel, (0, y), (1100, y)
+                )
+
+    def geometry(self, game: Game) -> tuple[float, float, float]:
         maze = game.maze
-        w, h = self.screen.get_size()
-        scale = min((w - 60) / maze.width, (h - 160) / maze.height)
-        ox = (w - maze.width * scale) / 2
-        oy = 110 + (h - 160 - maze.height * scale) / 2
-        self.text(f'SCORE {game.score}    LIVES {game.lives}    '
-                  f'LEVEL {game.index + 1}/{len(game.settings.levels)}'
-                  f'    TIME {max(0, math.ceil(game.remaining))}', 35)
-        self.text('ESC: pause  |  F1: cheats  |  arrows/WASD: move', 72)
-        for row, cells in enumerate(maze.grid):
-            for col, bits in enumerate(cells):
-                x, y = ox + col * scale, oy + row * scale
-                if bits & 1:
-                    pygame.draw.line(self.screen, BLUE, (x, y),
-                                     (x + scale, y), 2)
-                if bits & 2:
-                    pygame.draw.line(self.screen, BLUE, (x + scale, y),
-                                     (x + scale, y + scale), 2)
-                if bits & 4:
-                    pygame.draw.line(self.screen, BLUE, (x, y + scale),
-                                     (x + scale, y + scale), 2)
-                if bits & 8:
-                    pygame.draw.line(self.screen, BLUE, (x, y),
-                                     (x, y + scale), 2)
-        elapsed_ms = pygame.time.get_ticks()
+        scale = min(1020 / maze.width, 650 / maze.height)
+        y = 145 + (650 - maze.height * scale) / 2
+        return scale, (1100 - maze.width * scale) / 2, y
+
+    def walls(self, game: Game, scale: float, ox: float, oy: float) -> None:
+        key = (game.maze, self.prefs.theme, self.prefs.glow)
+        if key != self.maze_key:
+            self.maze_key = key
+            layer = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+            segments = set()
+            for row, cells in enumerate(game.maze.grid):
+                for col, bits in enumerate(cells):
+                    x, y = col, row
+                    for bit, a, b in ((1, (x, y), (x+1, y)),
+                                      (2, (x+1, y), (x+1, y+1)),
+                                      (4, (x, y+1), (x+1, y+1)),
+                                      (8, (x, y), (x, y+1))):
+                        if bits & bit:
+                            segments.add((a, b))
+            width = max(1, round(scale * .12))
+            t = self.theme
+            passes = []
+            if t.style == 'glow' and self.prefs.glow:
+                passes.extend([(max(2, width*3), tuple(c//5 for c in t.wall)),
+                               (max(2, width*2), tuple(c//2 for c in t.wall))])
+            passes.append((width, t.wall))
+            if t.style == 'double' and width >= 5:
+                passes.append((max(1, width//3), t.background))
+            for thickness, color in passes:
+                for a, b in segments:
+                    p = (round(ox+a[0]*scale), round(oy+a[1]*scale))
+                    q = (round(ox+b[0]*scale), round(oy+b[1]*scale))
+                    pygame.draw.line(layer, color, p, q, thickness)
+                    if thickness > 2:
+                        pygame.draw.circle(layer, color, p, thickness//2)
+                        pygame.draw.circle(layer, color, q, thickness//2)
+            self.maze_layer = layer
+        self.screen.blit(self.maze_layer, (0, 0))
+
+    def game(self, game: Game, dt: float) -> None:
+        self.background()
+        t = self.theme
+        scale, ox, oy = self.geometry(game)
+        self.walls(game, scale, ox, oy)
+        stats = [('SCORE', f'{game.score:06d}'), ('LIVES', str(game.lives)),
+                 ('LEVEL', f'{game.index+1}/{len(game.settings.levels)}'),
+                 ('TIME', f'{max(0, math.ceil(game.remaining))} s')]
+        for i, (label, value) in enumerate(stats):
+            x = 40 + i * 260
+            pygame.draw.rect(
+                self.screen, t.panel, (x, 20, 240, 75), border_radius=9
+            )
+            text(self.screen, self.small, label, (x+120, 37), t.foreground)
+            text(self.screen, self.font, value, (x+120, 66), t.accent)
+        bar(self.screen, pygame.Rect(40, 108, 1020, 8),
+            game.remaining / game.settings.level_max_time, t)
+        if game.frightened > 0:
+            bar(self.screen, pygame.Rect(40, 122, 1020, 6),
+                game.frightened/7, t)
+
+        def center(x: float, y: float) -> tuple[float, float]:
+            return ox+(x+.5)*scale, oy+(y+.5)*scale
+        now = pygame.time.get_ticks() if self.prefs.animations else 0
+        gums = game.gums | game.super_gums
+        if self.previous_maze is not game.maze:
+            self.particles.items.clear()
+        elif self.prefs.particles and not game.paused:
+            for x, y in self.previous_gums - gums:
+                self.particles.burst(*center(x, y))
+        self.previous_maze = game.maze
+        self.previous_gums = set(gums)
         for x, y in game.gums:
-            center = (ox + (x + .5) * scale,
-                      oy + (y + .5) * scale)
-            self.sprites.draw_gum(self.screen, center, scale)
+            self.sprites.draw_gum(self.screen, center(x, y), scale)
         for x, y in game.super_gums:
-            center = (ox + (x + .5) * scale,
-                      oy + (y + .5) * scale)
-            self.sprites.draw_gum(self.screen, center, scale,
-                                  super_gum=True)
-        player = game.player
-        center = (ox + (player.x + .5) * scale,
-                  oy + (player.y + .5) * scale)
-        sprite_size = max(2, round(scale * .8))
-        self.sprites.draw_pacman(self.screen, center, sprite_size,
-                                 player.direction, elapsed_ms)
+            pulse = 1 + .12 * math.sin(now / 180)
+            self.sprites.draw_gum(self.screen, center(x, y), scale*pulse, True)
+        size = max(2, round(scale*.8))
+        p = game.player
+        self.sprites.draw_pacman(
+            self.screen, center(p.x, p.y), size, p.direction, now
+        )
         for ghost, name in zip(game.ghosts, self.sprites.GHOST_NAMES):
-            if ghost.respawn > 0:
-                continue
-            center = (ox + (ghost.x + .5) * scale,
-                      oy + (ghost.y + .5) * scale)
-            self.sprites.draw_ghost(self.screen, center, sprite_size,
-                                    name, ghost.direction,
-                                    game.frightened, elapsed_ms)
-        if game.paused:
-            self.text('PAUSED - ENTER: resume / M: menu', h // 2,
-                      True, YELLOW)
+            if ghost.respawn <= 0:
+                self.sprites.draw_ghost(
+                    self.screen, center(ghost.x, ghost.y), size,
+                    name, ghost.direction, game.frightened,
+                    pygame.time.get_ticks()
+                )
+        if self.prefs.particles:
+            if not game.paused:
+                self.particles.update(dt)
+            self.particles.draw(self.screen, t.accent)
+        text(self.screen, self.small, 'ESC: pause   |   F1: reviewer controls',
+             (550, 810), t.foreground)
+
+    def overlay(self, title: str = 'PAUSED', subtitle: str = '') -> None:
+        shade = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+        shade.fill((0, 0, 0, 185))
+        self.screen.blit(shade, (0, 0))
+        pygame.draw.rect(
+            self.screen, self.theme.panel, (310, 175, 480, 425),
+            border_radius=14
+        )
+        self.text(title, 235, True)
+        if subtitle:
+            self.text(subtitle, 290)
+
+    def finish(self, fps: float) -> None:
+        if self.prefs.scanlines or self.prefs.theme == 'crt':
+            self.screen.blit(self.crt, (0, 0))
+        if self.prefs.show_fps:
+            text(
+                self.screen, self.small, f'{fps:.0f} FPS',
+                (1040, 10), self.theme.accent
+            )

@@ -1,5 +1,6 @@
 """Adapter for the assigned external A-Maze-ing package."""
 from collections import deque
+from importlib import import_module
 from typing import Any
 
 MOVES = {'U': (0, -1), 'R': (1, 0), 'D': (0, 1), 'L': (-1, 0)}
@@ -12,9 +13,8 @@ class Maze:
 
     def __init__(self, width: int, height: int, seed: int) -> None:
         """Generate a maze using the unmodified external package."""
-        from mazegenerator import MazeGenerator  # type: ignore[import-untyped]
-        source: Any = MazeGenerator(size=(width, height), seed=seed,
-                                    perfect=False)
+        source: Any = import_module('mazegenerator').MazeGenerator(
+            size=(width, height), seed=seed, perfect=False)
         self.grid: list[list[int]] = source.maze
         if (len(self.grid) != height or
                 any(len(row) != width for row in self.grid)):

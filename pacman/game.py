@@ -20,6 +20,7 @@ class Game:
         self.finished = False
         self.won = False
         self.paused = False
+        self.level_complete = False
         self.invincible = False
         self.freeze = False
         self.speed_boost = False
@@ -52,13 +53,22 @@ class Game:
         self.frightened = 0.0
         self.hit_cooldown = 1.5
         self.paused = False
+        self.level_complete = False
 
     def next_level(self) -> None:
         """Advance or end the game after all pellets are eaten."""
-        self.index += 1
-        if self.index >= len(self.settings.levels):
+        if self.finished or self.level_complete:
+            return
+        if self.index + 1 >= len(self.settings.levels):
             self.finished, self.won = True, True
         else:
+            self.level_complete = True
+            self.paused = True
+
+    def advance_level(self) -> None:
+        """Start the next level only after confirmation."""
+        if self.level_complete and not self.finished:
+            self.index += 1
             self.load_level()
 
     def update(self, dt: float) -> None:

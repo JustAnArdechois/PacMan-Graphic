@@ -1,6 +1,6 @@
 """Load, cache, animate and draw the original Pac-Man artwork."""
 from pathlib import Path
-import pygame
+import pygame  # type: ignore[import-not-found]
 
 
 class SpriteManager:
